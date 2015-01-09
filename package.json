@@ -1,9 +1,13 @@
 {
-  "name": "node-config-writer",
+  "name": "resin-config-writer",
   "version": "0.0.1",
   "main": "./lib.coffee",
   "scripts": {
     "test": "./node_modules/mocha/bin/mocha --compilers coffee:coffee-script/register ./test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@bitbucket.org:rulemotion/resin-config-writer.git"
   },
   "dependencies": {
     "bluebird": "~2.5.3",
