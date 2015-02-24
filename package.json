@@ -13,8 +13,7 @@
   },
   "dependencies": {
     "bluebird": "^2.6.0",
-    "combined-stream": "~0.0.7",
-    "mbr": "~0.3.0"
+    "combined-stream": "~0.0.7"
   },
   "devDependencies": {
     "chai": "~1.10.0",
