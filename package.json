@@ -1,9 +1,8 @@
 {
   "name": "resin-config-writer",
   "version": "0.0.2",
-  "main": "lib.js",
+  "main": "lib.coffee",
   "scripts": {
-    "prepublish": "./node_modules/.bin/coffee -c lib.coffee",
     "pretest": "npm run-script prepublish",
     "test": "./node_modules/.bin/mocha --compilers coffee:coffee-script/register ./test"
   },
@@ -13,10 +12,12 @@
   },
   "dependencies": {
     "bluebird": "^2.6.0",
-    "combined-stream": "~0.0.7"
+    "combined-stream": "~0.0.7",
+    "event-stream": "^3.2.2"
   },
   "devDependencies": {
     "chai": "~1.10.0",
+    "chai-as-promised": "^4.2.0",
     "coffee-script": "~1.8.0",
     "mocha": "~2.1.0",
     "stream-to-promise": "~1.0.4",

@@ -2,7 +2,8 @@ Promise = require 'bluebird'
 fs = Promise.promisifyAll(require('fs'))
 cp = Promise.promisifyAll(require('child_process'))
 CombinedStream = require 'combined-stream'
-SliceStream = require 'slice-stream'
+{ Stream } = require 'stream'
+es = require 'event-stream'
 
 # Parse the MBR of a disk.
 # Return an array of objects with information about each partition.
@@ -39,17 +40,38 @@ getPartitionInfo = (path, partitionNumber) ->
 # Create a stream from the given data that will pipe an output of a specific size.
 #
 # If less data are piped, zeros are added to the stream.
-# If more data are piped, the extra data are ignored.
-# Data can be a string, a buffer or a stream.
-createFixedSizeStream = (data, size) ->
-	sliceStream = new SliceStream {length: size}, (buf, sliceEnd, extra) ->
-		this.push(buf)
-		if sliceEnd
-			this.end()
-	partitionStream = CombinedStream.create()
-	partitionStream.append(data)
-	partitionStream.append fs.createReadStream '/dev/zero'
-	return partitionStream.pipe(sliceStream)
+# If more data are piped, the extra data are ignored and an error event is sent.
+# Data can be a buffer or a stream.
+createFixedSizeStream = (input, size, opts = {}) ->
+	fixedStream = CombinedStream.create()
+	pipedLength = 0
+	fixedStream.append (next) ->
+		if Buffer.isBuffer(input)
+			thestream = es.through().pause().queue(input).end()
+		else
+			thestream = input
+		next thestream.pipe es.mapSync (buf) ->
+			console.log('piped', buf, pipedLength, buf.length + pipedLength, size)
+			if size <= pipedLength
+				return ""
+			if size < buf.length + pipedLength
+				offset = size - pipedLength
+				pipedLength = size
+				if opts.overflowCallback
+					opts.overflowCallback(buf.slice(offset))
+				return buf.slice(0, offset)
+			else
+				pipedLength += buf.length
+				return buf
+	fixedStream.append (next) ->
+		remainingLength = size - pipedLength
+		console.log('rem', remainingLength, size, pipedLength)
+		if remainingLength > 0
+			next fs.createReadStream '/dev/zero',
+				start: 0
+				end: remainingLength - 1
+		else
+			next(CombinedStream.create())
 
 # Replace the contents of a partition.
 # 
@@ -64,20 +86,24 @@ createFixedSizeStream = (data, size) ->
 #
 # Returns a promise that resolves into a stream with the new disk contents.
 exports.replacePartition = replacePartition = (path, partitionNumber, data) ->
-	if typeof data isnt 'string' and not Buffer.isBuffer(data)
-		throw new TypeError('Parameter data should be string or buffer')
-	getPartitionInfo(path, partitionNumber)
-	.then (partition) ->
-		if typeof data is 'string'
-			data = new Buffer(data)
-		if data.length? > partition.size
-			throw new RangeError('Contents should not be larger than partition size.')
+	Promise.try ->
+		if typeof data isnt 'string' and not Buffer.isBuffer(data) and not data instanceof Stream and not typeof data == 'function'
+			throw new TypeError('Parameter data should be string or buffer')
+		if typeof partitionNumber != 'number'
+			throw new TypeError('Parameter partitionNumber should be a number.')
+		getPartitionInfo(path, partitionNumber)
+		.then (partition) ->
+			if typeof data is 'string'
+				data = new Buffer(data)
+			if Buffer.isBuffer(data) and data.length > partition.size
+				throw new RangeError('Contents should not be larger than partition size.')
+			console.log('positions', partition.start - 1, partition.end + 1)
 
-		combinedStream = CombinedStream.create()
-		combinedStream.append fs.createReadStream path,
-			start: 0 
-			end: partition.start - 1
-		combinedStream.append(createFixedSizeStream(data, partition.size))
-		combinedStream.append fs.createReadStream path,
-			start: partition.end + 1
-		return combinedStream
+			combinedStream = CombinedStream.create()
+			combinedStream.append fs.createReadStream path,
+				start: 0 
+				end: partition.start - 1
+			combinedStream.append(createFixedSizeStream(data, partition.size))
+			combinedStream.append fs.createReadStream path,
+				start: partition.end + 1
+			return combinedStream
