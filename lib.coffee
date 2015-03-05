@@ -2,6 +2,7 @@ Promise = require 'bluebird'
 fs = Promise.promisifyAll(require('fs'))
 cp = Promise.promisifyAll(require('child_process'))
 CombinedStream = require 'combined-stream'
+SliceStream = require 'slice-stream'
 
 # Parse the MBR of a disk.
 # Return an array of objects with information about each partition.
@@ -35,14 +36,31 @@ getPartitionInfo = (path, partitionNumber) ->
 			throw new RangeError('Disk does not have such partition.')
 		return mbr[partitionNumber]
 
+# Create a stream from the given data that will pipe an output of a specific size.
+#
+# If less data are piped, zeros are added to the stream.
+# If more data are piped, the extra data are ignored.
+# Data can be a string, a buffer or a stream.
+createFixedSizeStream = (data, size) ->
+	sliceStream = new SliceStream {length: size}, (buf, sliceEnd, extra) ->
+		this.push(buf)
+		if sliceEnd
+			this.end()
+	partitionStream = CombinedStream.create()
+	partitionStream.append(data)
+	partitionStream.append fs.createReadStream '/dev/zero'
+	return partitionStream.pipe(sliceStream)
+
 # Replace the contents of a partition.
 # 
 # Parameters:
 # path: Path to disk image file.
 # partitionNumber: Index of the partition to be replaced.
-# data: string or buffer with the new contents of the partition.
+# data: string, buffer or stream with the new contents of the partition.
 # 
 # If data length is less than partition size, it will be padded with zeros.
+# Warning: if data is a stream, the caller is responsible for it to
+# cover the whole size of the partition.
 #
 # Returns a promise that resolves into a stream with the new disk contents.
 exports.replacePartition = replacePartition = (path, partitionNumber, data) ->
@@ -52,18 +70,14 @@ exports.replacePartition = replacePartition = (path, partitionNumber, data) ->
 	.then (partition) ->
 		if typeof data is 'string'
 			data = new Buffer(data)
-		if data.length > partition.size
+		if data.length? > partition.size
 			throw new RangeError('Contents should not be larger than partition size.')
 
 		combinedStream = CombinedStream.create()
 		combinedStream.append fs.createReadStream path,
 			start: 0 
 			end: partition.start - 1
-		combinedStream.append(data)
-		if partition.size > data.length
-			combinedStream.append fs.createReadStream '/dev/zero',
-				start: 0
-				end: partition.size - data.length - 1
+		combinedStream.append(createFixedSizeStream(data, partition.size))
 		combinedStream.append fs.createReadStream path,
 			start: partition.end + 1
 		return combinedStream
