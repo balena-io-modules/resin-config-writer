@@ -58,7 +58,9 @@ exports.replacePartition = (path, partitionNumber, data) ->
 		if typeof partitionNumber != 'number'
 			throw new TypeError('Parameter partitionNumber should be a number.')
 		if data instanceof Stream
-			data.pause() # Ensure we are on a paused mode so that no data is lost.
+			# Ensure we are on a paused mode so that no data is lost.
+			# Handles this bug on CombinedStream library: https://github.com/felixge/node-combined-stream/issues/24
+			data.pause() 
 		getPartitionInfo(path, partitionNumber)
 		.then (partition) ->
 			if typeof data is 'string' or Buffer.isBuffer(data)
