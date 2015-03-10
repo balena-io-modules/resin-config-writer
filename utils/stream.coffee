@@ -30,6 +30,7 @@ exports.overflowStream = overflowStream = (size) ->
 			offset = size - pipedLength
 			data = data.slice(0, offset)
 			pipedLength = size
+			@emit('data', data)
 			@emit('error', new RangeError('Stream overflowed'))
 		else
 			pipedLength += data.length
