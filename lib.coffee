@@ -34,7 +34,7 @@ exports.parseMBR = parseMBR = (path) ->
 # partitionNumber: the index of partition
 #
 # For details about the result see MBR.Partition class of 'mbr' module.
-getPartitionInfo = (path, partitionNumber) ->
+exports.getPartitionInfo = getPartitionInfo = (path, partitionNumber) ->
 	parseMBR(path)
 	.then (mbr) ->
 		if not mbr[partitionNumber]?
@@ -57,10 +57,10 @@ exports.replacePartition = (path, partitionNumber, data) ->
 			throw new TypeError('Parameter data should be string, buffer or stream.')
 		if typeof partitionNumber != 'number'
 			throw new TypeError('Parameter partitionNumber should be a number.')
-		if data instanceof Stream
+		# if data instanceof Stream
 			# Ensure we are on a paused mode so that no data is lost.
 			# Handles this bug on CombinedStream library: https://github.com/felixge/node-combined-stream/issues/24
-			data.pause() 
+			# data.pause() 
 		getPartitionInfo(path, partitionNumber)
 		.then (partition) ->
 			if typeof data is 'string' or Buffer.isBuffer(data)
@@ -76,3 +76,16 @@ exports.replacePartition = (path, partitionNumber, data) ->
 			combinedStream.append fs.createReadStream path,
 				start: partition.end + 1
 			return combinedStream
+
+exports.getContents = (path, start, end) ->
+	fs.createReadStream(path, { start, end })
+
+exports.createPartitionStream = (path, partitionNumber, data) ->
+	getPartitionInfo(path, partitionNumber)
+	.then (partition) ->
+		combinedStream = CombinedStream.create()
+		combinedStream.append(data)
+		combinedStream.append fs.createReadStream '/dev/zero',
+			start: 0
+			end: partition.size - data.length - 1
+		return combinedStream
