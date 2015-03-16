@@ -7,12 +7,10 @@ exports.underflowStream = underflowStream = (size) ->
 	pipedLength = 0
 	es.through(
 		(data) ->
-			console.error('piping under', data)
 			pipedLength += data.length
 			@emit('data', data)
 		(data) ->
 			if pipedLength < size
-				console.error('need to pipe more', pipedLength, size)
 				zeroStream = fs.createReadStream '/dev/zero', 
 					start: 0
 					end: size - pipedLength - 1
@@ -29,14 +27,13 @@ exports.overflowStream = overflowStream = (size) ->
 	pipedLength = 0
 	es.through (data) ->
 		if size < pipedLength + data.length
-			console.error('overflow')
 			offset = size - pipedLength
 			data = data.slice(0, offset)
 			pipedLength = size
+			@emit('data', data)
 			@emit('error', new RangeError('Stream overflowed'))
 		else
 			pipedLength += data.length
-			console.error('piping over', data)
 			@emit('data', data)
 
 
