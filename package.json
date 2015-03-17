@@ -3,7 +3,7 @@
   "version": "0.0.2",
   "main": "lib.js",
   "scripts": {
-    "prepublish": "./node_modules/.bin/coffee -c lib.coffee utils/*.coffee",
+    "prepublish": "./node_modules/.bin/coffee -c lib.coffee",
     "pretest": "npm run-script prepublish",
     "test": "./node_modules/.bin/mocha --compilers coffee:coffee-script/register ./test"
   },
