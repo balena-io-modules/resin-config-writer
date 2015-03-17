@@ -5,7 +5,7 @@ CombinedStream = require 'combined-stream'
 { Stream } = require 'stream'
 es = require 'event-stream'
 
-{ fixedSizeStream } = require './utils/stream'
+{ fixedLengthStream } = require 'fixed-length-stream'
 
 # Parse the MBR of a disk.
 # Return an array of objects with information about each partition.
@@ -72,17 +72,7 @@ exports.replacePartition = (path, partitionNumber, data) ->
 			combinedStream.append fs.createReadStream path,
 				start: 0
 				end: partition.start - 1
-			combinedStream.append(data.pipe(fixedSizeStream(partition.size)))
+			combinedStream.append(data.pipe(fixedLengthStream(partition.size)))
 			combinedStream.append fs.createReadStream path,
 				start: partition.end + 1
 			return combinedStream
-
-exports.getContents = (path, start, end) ->
-	fs.createReadStream(path, { start, end })
-
-exports.createPartitionStream = (path, partitionNumber, data) ->
-	getPartitionInfo(path, partitionNumber)
-	.then (partition) ->
-		combinedStream = CombinedStream.create()
-		combinedStream.append(data)
-		return combinedStream.pipe(fixedSizeStream(partition.size))
