@@ -105,12 +105,12 @@ describe 'injectToFAT32', ->
 		@inFile = "./test/data/test.hddimg"
 	describe 'with string input', ->
 		it 'injects successfully', ->
-			data = JSON.stringify({ foo: "bar", color: "red" })
-			injection = writer.injectToFAT32(@inFile, 'config.json', data)
-			expect(injection).to.be.fulfilled
-			injection.then =>
-				child_process.execAsync("mcopy -n -i #{@inFile} ::config.json /tmp/config.json")
-			.then ->
-				fs.readFileAsync("/tmp/config.json")
-			.then (storedData) ->
-				expect(storedData.toString()).to.be.equal(data)
+			Promise.using createTmp(), ( [ dest ] ) =>
+				data = JSON.stringify({ foo: "bar", color: "red" })
+				writer.injectToFAT32(@inFile, 'config.json', data)
+				.then =>
+					child_process.execAsync("mcopy -n -i #{@inFile} ::config.json #{dest}")
+				.then ->
+					fs.readFileAsync(dest)
+				.then (storedData) ->
+					expect(storedData.toString()).to.be.equal(data)
