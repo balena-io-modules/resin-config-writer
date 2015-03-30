@@ -1,5 +1,6 @@
 resin-config-writer
 
-=Description=
+Description
+-----------
 
 Module that handles writing user configuration into resin images.
