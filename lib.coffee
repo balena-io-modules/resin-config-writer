@@ -5,7 +5,7 @@ CombinedStream = require 'combined-stream'
 { Stream } = require 'stream'
 es = require 'event-stream'
 
-{ fixedLengthStream } = require 'fixed-length-stream'
+{ fixedLengthStream } = require 'fixed-stream'
 
 # Parse the MBR of a disk.
 # Return an array of objects with information about each partition.
