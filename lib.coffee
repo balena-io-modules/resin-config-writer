@@ -78,6 +78,15 @@ exports.replacePartition = (path, partitionNumber, data) ->
 				start: partition.end + 1
 			return combinedStream
 
+# Inject some data to a FAT32 raw partition image.
+# Writes data to a file within the partition, overwriting it if it exists.
+#
+# Parameters:
+#    path: Path to FAT32 partition file
+#    destination: Path within the partition file where to place the data
+#    data: The data to write to the destination.
+#
+# Returns a promise that is fulfilled when the data are written succesfully.
 exports.injectToFAT32 = (path, destination, data) ->
 	tmpFile = tmp.fileAsync().disposer ([tmpPath, fd, cleanup]) ->
 		cleanup()	
@@ -94,6 +103,6 @@ exports.injectToFAT32 = (path, destination, data) ->
 				tmpStream.close()
 		.then ->
 			cp.execAsync("mcopy -o -i #{path} -s #{tmpPath} ::#{destination}")
-			.spread (stdout, stderr) ->
-				if stdout isnt '' or stderr isnt ''
-					throw new Error("Unexpected mcopy output: #{stdout} #{stderr}")
+		.spread (stdout, stderr) ->
+			if stdout isnt '' or stderr isnt ''
+				throw new Error("Unexpected mcopy output: #{stdout} #{stderr}")
