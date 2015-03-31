@@ -98,3 +98,19 @@ describe 'replacePartition', ->
 					stream.on('end', resolve)
 					stream.resume()
 			expect(partition).to.be.rejectedWith(RangeError)
+
+describe 'injectToFAT32', ->
+	@timeout(10000)
+	before ->
+		@inFile = "./test/data/test.hddimg"
+	describe 'with string input', ->
+		it 'injects successfully', ->
+			Promise.using createTmp(), ( [ dest ] ) =>
+				data = JSON.stringify({ foo: "bar", color: "red" })
+				writer.injectToFAT32(@inFile, 'config.json', data)
+				.then =>
+					child_process.execAsync("mcopy -n -i #{@inFile} ::config.json #{dest}")
+				.then ->
+					fs.readFileAsync(dest)
+				.then (storedData) ->
+					expect(storedData.toString()).to.be.equal(data)
