@@ -1,5 +1,5 @@
 {
-  "name": "resin-config-writer",
+  "name": "@resin/config-writer",
   "version": "0.0.4",
   "main": "lib.js",
   "scripts": {
@@ -12,17 +12,17 @@
     "url": "git@bitbucket.org:rulemotion/resin-config-writer.git"
   },
   "dependencies": {
-    "bluebird": "^2.6.0",
-    "combined-stream": "~0.0.7",
-    "event-stream": "~3.2.2",
+    "bluebird": "^3.0.0",
+    "combined-stream": "^1.0.0",
+    "event-stream": "^3.2.2",
     "fixed-stream": "~0.0.1"
   },
   "devDependencies": {
-    "chai": "~1.10.0",
-    "chai-as-promised": "~4.2.0",
-    "coffee-script": "~1.8.0",
-    "mocha": "~2.1.0",
-    "stream-to-promise": "~1.0.4",
+    "chai": "^3.0.0",
+    "chai-as-promised": "^5.0.0",
+    "coffee-script": "~1.10.0",
+    "mocha": "^2.1.0",
+    "stream-to-promise": "^1.0.4",
     "tmp": "~0.0.24"
   }
 }

@@ -1,10 +1,10 @@
 Promise = require 'bluebird'
-fs = Promise.promisifyAll(require('fs'))
-cp = Promise.promisifyAll(require('child_process'))
+fs = Promise.promisifyAll require 'fs'
+cp = Promise.promisifyAll(require('child_process'), multiArgs: true)
 CombinedStream = require 'combined-stream'
 { Stream } = require 'stream'
 es = require 'event-stream'
-tmp = Promise.promisifyAll(require('tmp'))
+tmp = Promise.promisifyAll(require('tmp'), multiArgs: true)
 
 { fixedLengthStream } = require 'fixed-stream'
 
@@ -61,7 +61,7 @@ exports.replacePartition = (path, partitionNumber, data) ->
 		if data instanceof Stream
 			# Ensure we are on a paused mode so that no data is lost.
 			# Handles this bug on CombinedStream library: https://github.com/felixge/node-combined-stream/issues/24
-			data.pause() 
+			data.pause()
 		getPartitionInfo(path, partitionNumber)
 		.then (partition) ->
 			if typeof data is 'string' or Buffer.isBuffer(data)
@@ -89,7 +89,7 @@ exports.replacePartition = (path, partitionNumber, data) ->
 # Returns a promise that is fulfilled when the data are written succesfully.
 exports.injectToFAT32 = (path, destination, data) ->
 	tmpFile = tmp.fileAsync().disposer ([tmpPath, fd, cleanup]) ->
-		cleanup()	
+		cleanup()
 
 	Promise.using tmpFile, ([tmpPath, fd, cleanup]) ->
 		new Promise (resolve, reject) ->
