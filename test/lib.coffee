@@ -1,9 +1,9 @@
 Promise = require 'bluebird'
 
 { Stream } = require 'stream'
-tmp = Promise.promisifyAll(require('tmp'))
+tmp = Promise.promisifyAll(require('tmp'), multiArgs: true)
 fs = require 'fs'
-child_process = Promise.promisifyAll(require('child_process'))
+child_process = Promise.promisifyAll(require('child_process'), multiArgs: true)
 chaiAsPromised = require 'chai-as-promised'
 chai = require 'chai'
 chai.use(chaiAsPromised)
@@ -20,7 +20,7 @@ streamToFile = (srcStream, destPath) ->
 		srcStream.on('end', resolve)
 		srcStream.on('error', reject)
 
-createTmp = -> 
+createTmp = ->
 	return tmp.fileAsync().disposer ( [ tmpPath, fd, cleanup ] ) ->
 		cleanup()
 
@@ -81,7 +81,7 @@ describe 'replacePartition', ->
 			expect(testReplace(@inFile, 2, data, @checksums)).to.be.rejectedWith(RangeError)
 	describe 'with buffer input', ->
 		it 'replaces successfully', ->
-			data = new Buffer("test string")	
+			data = new Buffer("test string")
 			testReplace(@inFile, 2, data, @checksums)
 		it 'does not allow buffers larger than the partition', ->
 			data = new Buffer(1000000)
@@ -89,7 +89,7 @@ describe 'replacePartition', ->
 	describe 'with stream input', ->
 		it 'replaces successfully', ->
 			data = fs.createReadStream("./package.json")
-			testReplace(@inFile, 2, data, @checksums)	
+			testReplace(@inFile, 2, data, @checksums)
 		it 'emits error event for streams larger than the partition', ->
 			data = fs.createReadStream("/dev/zero", { start: 0, end: 1000000 })
 			partition = writer.replacePartition(@inFile, 2, data).then (stream) ->
