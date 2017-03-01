@@ -99,8 +99,9 @@ exports.injectToFAT32 = (path, destination, data) ->
 			if data instanceof Stream
 				data.pipe(tmpStream)
 			else
-				tmpStream.write(data)
-				tmpStream.close()
+				tmpStream.writeAsync(data)
+				.then ->
+					tmpStream.closeAsync()
 		.then ->
 			cp.execAsync("mcopy -o -i #{path} -s #{tmpPath} ::#{destination}")
 		.spread (stdout, stderr) ->

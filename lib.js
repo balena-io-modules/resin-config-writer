@@ -102,8 +102,9 @@
         if (data instanceof Stream) {
           return data.pipe(tmpStream);
         } else {
-          tmpStream.write(data);
-          return tmpStream.close();
+          return tmpStream.writeAsync(data).then(function() {
+            return tmpStream.closeAsync();
+          });
         }
       }).then(function() {
         return cp.execAsync("mcopy -o -i " + path + " -s " + tmpPath + " ::" + destination);
