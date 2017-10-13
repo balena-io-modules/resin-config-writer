@@ -1,6 +1,6 @@
 {
   "name": "@resin/config-writer",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "main": "lib.js",
   "scripts": {
     "prepublish": "coffee -c lib.coffee",
