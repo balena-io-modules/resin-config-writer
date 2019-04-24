@@ -1,6 +1,6 @@
 {
   "name": "@balena.io/config-writer",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "main": "lib.js",
   "scripts": {
     "prepublish": "coffee -c lib.coffee",
