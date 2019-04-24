@@ -1,5 +1,5 @@
 {
-  "name": "@resin/config-writer",
+  "name": "@balena.io/config-writer",
   "version": "0.0.7",
   "main": "lib.js",
   "scripts": {
